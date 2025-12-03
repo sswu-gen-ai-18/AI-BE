@@ -1,14 +1,16 @@
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI
-from routers.process_audio import router as care_router
+from routers import process_audio
 
-app = FastAPI(
-    title="Customer Care Multi-Agent Backend",
-    version="1.0.0",
-)
 
-app.include_router(care_router)
+
+app = FastAPI(title="AI Customer Care Backend")
+
+# /api/analyze_call
+app.include_router(process_audio.router, prefix="/api")
 
 
 @app.get("/")
-async def root():
-    return {"message": "Customer Care Backend is running."}
+def root():
+    return {"message": "AI Customer Care Backend is running"}

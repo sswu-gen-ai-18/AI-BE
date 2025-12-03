@@ -1,19 +1,20 @@
 from openai import OpenAI
-
+import os
 
 class GuideAgent:
-    def __init__(self, client: OpenAI, model_name: str = "gpt-4.1-mini"):
-        self.client = client
+    def __init__(self, model_name="gpt-4o-mini"):
+        api_key = os.getenv("OPENAI_API_KEY")
+        self.client = OpenAI(api_key=api_key)
         self.model_name = model_name
 
-    def generate_response(self, system_prompt: str, user_prompt: str) -> str:
-        response = self.client.chat.completions.create(
+    def generate(self, system_prompt, user_prompt):
+        res = self.client.chat.completions.create(
             model=self.model_name,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            temperature=0.4,
-            max_tokens=400,
+            temperature=0.3,
         )
-        return response.choices[0].message.content.strip()
+
+        return res.choices[0].message.content

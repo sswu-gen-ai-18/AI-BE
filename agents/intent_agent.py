@@ -1,7 +1,8 @@
 from typing import List
 from openai import OpenAI
+import os
 
-INTENT_LABELS: List[str] = [
+INTENT_LABELS = [
     "환불요청",
     "배송문의",
     "불만",
@@ -10,10 +11,10 @@ INTENT_LABELS: List[str] = [
     "일반문의",
 ]
 
-
 class IntentAgent:
-    def __init__(self, client: OpenAI, model_name: str = "gpt-4.1-mini"):
-        self.client = client
+    def __init__(self, model_name="gpt-4o-mini"):
+        api_key = os.getenv("OPENAI_API_KEY")
+        self.client = OpenAI(api_key=api_key)
         self.model_name = model_name
 
     def classify_intent(self, text: str) -> str:
@@ -24,15 +25,13 @@ class IntentAgent:
 
 고객 발화: "{text}"
 
-규칙:
-- 라벨만 출력하세요.
+라벨만 출력하세요.
 """
 
         response = self.client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
-            max_tokens=20,
         )
 
         label = response.choices[0].message.content.strip()
