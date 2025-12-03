@@ -1,2 +1,18 @@
+# Ignore KoBERT model weights
 models/kobert_emotion_final/model.safetensors
 models/kobert_emotion_final/pytorch_model.bin
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+env/
+
+# Environment variables
+.env
+
+# Editor settings
+.vscode/
+.idea/
