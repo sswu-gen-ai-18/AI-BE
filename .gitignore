@@ -1,14 +1,18 @@
+# Ignore KoBERT model weights
+models/kobert_emotion_final/model.safetensors
+models/kobert_emotion_final/pytorch_model.bin
+
 # Python
 __pycache__/
 *.py[cod]
 
-# 가상환경
+# Virtual environments
 venv/
 env/
 
-# 환경변수
+# Environment variables
 .env
 
-# 에디터 설정
+# Editor settings
 .vscode/
 .idea/
