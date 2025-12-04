@@ -2,7 +2,7 @@ import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 POLICY_DIR = os.path.join(BASE_DIR, "..", "policies")
