@@ -1,6 +1,6 @@
 import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import TextLoader
 
@@ -22,13 +22,12 @@ def build_retriever():
     )
     split_docs = splitter.split_documents(docs)
 
-    # 3) OpenAI Embeddings 사용
+    # 3) Embeddings
     embeddings = OpenAIEmbeddings()
 
-    # 4) Chroma vector DB
-    vectordb = Chroma.from_documents(split_docs, embeddings)
+    # 4) Vector DB: FAISS 사용
+    vectordb = FAISS.from_documents(split_docs, embeddings)
 
     return vectordb.as_retriever()
-
 
 POLICY_RETRIEVER = build_retriever()
