@@ -1,5 +1,6 @@
 langchain
 langchain-openai
+langchain-community
 fastapi==0.110.0
 uvicorn==0.29.0
 openai==1.35.13
