@@ -1,4 +1,7 @@
+venv/
+__pycache__/
 models/
-kobert_emotion_final/
-notebooks/
-tests/
+AI-BE/
+*.ipynb
+*.pt
+*.bin
