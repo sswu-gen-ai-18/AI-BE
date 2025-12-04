@@ -1,0 +1,14 @@
+[build-system]
+# setuptools만 사용하도록 강제 → Rust 빌드 절대 시도 안 함
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "backend"
+version = "0.1.0"
+description = "FastAPI backend server"
+requires-python = ">=3.10"
+
+# ⚠ dependencies를 비워 두는 것이 핵심
+#    여기 dependencies를 적으면 pip install . 과정에서 모델 폴더까지 포함될 수 있음
+dependencies = []
