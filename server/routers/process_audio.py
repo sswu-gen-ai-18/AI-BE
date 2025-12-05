@@ -37,7 +37,13 @@ def analyze_call(data: CallInput):
     )
 
     # 4) 대응문 생성
-    response_text = guide_agent.generate(system_prompt, user_prompt)
+    response_text = guide_agent.generate(
+        system_prompt="당신은 고객센터 전문 상담사입니다.",
+        user_text=data.text,
+        intent=intent,
+        emotion_label=data.emotion_label,
+        emotion_score=smoothed_score
+    )
 
     # 5) 최종 패키징
     result = ResponseGuide(
@@ -47,3 +53,11 @@ def analyze_call(data: CallInput):
     )
 
     return CallAnalysisResult(result=result)
+
+@router.get("/debug/policies")
+def debug_policies():
+    import os
+    from agents.policy_rag import POLICY_DIR
+
+    files = os.listdir(POLICY_DIR)
+    return {"policies": files}
