@@ -2,7 +2,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI
-from routers import process_audio
+from server.routers import process_audio   # ← 이걸로 수정!
+
 
 app = FastAPI(title="AI Customer Care Backend")
 
@@ -23,4 +24,5 @@ port = int(os.environ.get("PORT", 8000))
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+    uvicorn.run("server.main:app", host="0.0.0.0", port=port)
+

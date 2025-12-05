@@ -80,76 +80,76 @@ class EmotionAgent:
 # ===========================
 # 3) Solar 기반 Emotion Agent
 # ===========================
-class SolarEmotionAgent:
-    """
-    Upstage Solar를 이용해 감정(anger, sad, fear)을 분류하는 에이전트.
-    인터페이스를 기존 EmotionAgent와 최대한 비슷하게 맞춰서
-    predict / predict_proba 둘 다 제공.
-    """
-
-    def __init__(self):
-        # 필요하면 나중에 옵션 추가 가능
-        pass
-
-    def _call_solar(self, text: str) -> dict:
-        """
-        내부에서만 쓰는 함수: Solar에 실제로 요청 보내고 JSON 받기.
-        """
-        system_prompt = """
-        너는 한국어 콜센터 고객 발화의 감정을 분류하는 분석가야.
-
-        이 발화의 감정을 아래 세 가지 중에서만 선택해:
-        - anger
-        - sad
-        - fear
-
-        각 레이블에 대해 0.0~1.0 사이의 확률을 생각하고,
-        가장 확률이 높은 레이블을 emotion_label 로,
-        그 레이블의 확률을 emotion_score 로 반환해.
-
-        반드시 아래 JSON 형식으로만, 다른 설명 없이 답해.
-
-        {
-          "emotion_label": "anger",
-          "emotion_score": 0.87,
-          "probs": {
-            "anger": 0.87,
-            "sad": 0.02,
-            "fear": 0.11
-          }
-        }
-        """
-
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"고객 발화: {text}"},
-        ]
-
-        resp = solar_chat(
-            messages,
-            model="solar-1-mini-chat",
-            response_format={"type": "json_object"},
-        )
-
-        content = resp.choices[0].message.content
-
-        try:
-            data = json.loads(content)
-        except json.JSONDecodeError:
-            # 혹시 JSON 실패해도 코드 안 터지게 기본값
-            data = {
-                "emotion_label": "fear",
-                "emotion_score": 0.0,
-                "probs": {},
-                "raw": content,
-            }
-
-        # 누락된 값들 기본값 세팅
-        data.setdefault("emotion_label", "fear")
-        data.setdefault("emotion_score", 0.0)
-        data.setdefault("probs", {})
-
-        return data
+# class SolarEmotionAgent:
+#     """
+#     Upstage Solar를 이용해 감정(anger, sad, fear)을 분류하는 에이전트.
+#     인터페이스를 기존 EmotionAgent와 최대한 비슷하게 맞춰서
+#     predict / predict_proba 둘 다 제공.
+#     """
+#
+#     def __init__(self):
+#         # 필요하면 나중에 옵션 추가 가능
+#         pass
+#
+#     def _call_solar(self, text: str) -> dict:
+#         """
+#         내부에서만 쓰는 함수: Solar에 실제로 요청 보내고 JSON 받기.
+#         """
+#         system_prompt = """
+#         너는 한국어 콜센터 고객 발화의 감정을 분류하는 분석가야.
+#
+#         이 발화의 감정을 아래 세 가지 중에서만 선택해:
+#         - anger
+#         - sad
+#         - fear
+#
+#         각 레이블에 대해 0.0~1.0 사이의 확률을 생각하고,
+#         가장 확률이 높은 레이블을 emotion_label 로,
+#         그 레이블의 확률을 emotion_score 로 반환해.
+#
+#         반드시 아래 JSON 형식으로만, 다른 설명 없이 답해.
+#
+#         {
+#           "emotion_label": "anger",
+#           "emotion_score": 0.87,
+#           "probs": {
+#             "anger": 0.87,
+#             "sad": 0.02,
+#             "fear": 0.11
+#           }
+#         }
+#         """
+#
+#         messages = [
+#             {"role": "system", "content": system_prompt},
+#             {"role": "user", "content": f"고객 발화: {text}"},
+#         ]
+#
+#         resp = solar_chat(
+#             messages,
+#             model="solar-1-mini-chat",
+#             response_format={"type": "json_object"},
+#         )
+#
+#         content = resp.choices[0].message.content
+#
+#         try:
+#             data = json.loads(content)
+#         except json.JSONDecodeError:
+#             # 혹시 JSON 실패해도 코드 안 터지게 기본값
+#             data = {
+#                 "emotion_label": "fear",
+#                 "emotion_score": 0.0,
+#                 "probs": {},
+#                 "raw": content,
+#             }
+#
+#         # 누락된 값들 기본값 세팅
+#         data.setdefault("emotion_label", "fear")
+#         data.setdefault("emotion_score", 0.0)
+#         data.setdefault("probs", {})
+#
+#         return data
 
     def predict(self, text: str) -> dict:
         """

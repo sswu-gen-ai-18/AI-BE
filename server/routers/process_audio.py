@@ -6,7 +6,9 @@ from server.agents.intent_agent import IntentAgent
 from server.agents.guide_agent import GuideAgent
 from server.agents.calm_agent import CalmAgent
 from server.agents.emotion_smoothing import EmotionSmoother
+
 from server.agents.solar_emotion_agent import SolarEmotionAgent
+
 
 
 router = APIRouter()
@@ -19,7 +21,9 @@ guide_agent = GuideAgent()
 calm_agent = CalmAgent()
 
 emotion_smoother = EmotionSmoother(window=3)
+
 solar_emotion_agent = SolarEmotionAgent
+
 
 
 # ==========================
@@ -61,6 +65,7 @@ def analyze_call(data: CallInput):
 # ==========================
 # Solar 기반 텍스트-only 분석 API
 # ==========================
+
 class SolarCallInput(BaseModel):
      session_id: str
      text: str
@@ -103,6 +108,50 @@ def analyze_call_solar(data: SolarCallInput):
         response_text=response_text,
     )
     return CallAnalysisResult(result=result)
+
+class SolarCallInput(BaseModel):
+    session_id: str
+    text: str
+
+
+@router.post("/analyze-solar", response_model=CallAnalysisResult)
+def analyze_call_solar(data: SolarCallInput):
+    """
+    텍스트만 받아서 Solar 기반 감정 분석 → intent 분류 → smoothing → 가이드 생성
+    """
+
+    # 0) Solar 감정 분석
+    emotion_result = solar_emotion_agent.predict(data.text)
+    emotion_label = emotion_result["emotion_label"]
+    raw_emotion_score = emotion_result["emotion_score"]
+
+
+    # 1) Intent 분류
+    intent = intent_agent.classify_intent(data.text)
+
+    # 2) 감정 smoothing
+    smoothed_score = emotion_smoother.add_score(
+        data.session_id,
+        raw_emotion_score
+    )
+
+    # 3) GuideAgent 호출
+    response_text = guide_agent.generate(
+        system_prompt="당신은 고객센터 전문 상담사입니다.",
+        user_text=data.text,
+        intent=intent,
+        emotion_label=emotion_label,
+        emotion_score=smoothed_score
+    )
+
+    # 4) 패키징
+    result = ResponseGuide(
+        intent=intent,
+        emotion_label=emotion_label,
+        response_text=response_text,
+    )
+    return CallAnalysisResult(result=result)
+
 
 
 # ==========================
