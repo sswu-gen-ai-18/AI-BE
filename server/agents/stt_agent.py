@@ -1,43 +1,46 @@
 # server/agents/stt_agent.py
-import whisper
-from .solar_client import solar_chat   # ← Solar 호출
+import os
+import requests
+
+UPSTAGE_API_KEY = os.getenv("UPSTAGE_API_KEY")
+
+# Upstage Solar STT 엔드포인트
+SOLAR_STT_URL = "https://api.upstage.ai/v1/audio/transcriptions"
+
 
 class STTAgent:
-    def __init__(self, device="mps"):
-        print("[STTAgent] Whisper 모델 로딩 중...")
-        self.model = whisper.load_model("small", device=device)
+    def __init__(self):
+        if UPSTAGE_API_KEY is None:
+            raise ValueError("UPSTAGE_API_KEY is not set!")
 
-    def run(self, audio_path: str) -> str:
+    def transcribe(self, audio_path: str) -> str:
         """
-        1) Whisper로 음성 → 텍스트 추출
-        2) Solar로 문장 정제 (맞춤법/구어체 → 상담 문장)
+        Solar STT를 사용하여 음성을 텍스트로 변환.
+        긴 음성도 내부에서 발화 단위로 잘라서 처리해줌.
         """
-        # 1) Whisper STT
-        whisper_result = self.model.transcribe(
-            audio_path,
-            language="ko",
-            fp16=False,
-        )
-        raw_text = whisper_result["text"]
+        with open(audio_path, "rb") as f:
+            response = requests.post(
+                SOLAR_STT_URL,
+                headers={
+                    "Authorization": f"Bearer {UPSTAGE_API_KEY}"
+                },
+                files={
+                    "file": (os.path.basename(audio_path), f, "audio/wav")
+                },
+                data={
+                    "language": "ko"
+                },
+            )
 
-        # 2) Solar로 자연스러운 상담 발화로 후처리
-        messages = [
-            {
-                "role": "system",
-                "content": (
-                    "너는 한국어 고객센터 음성 인식 후처리 전문가야. "
-                    "STT 결과를 자연스러운 문장으로 정제해줘. "
-                    "불필요한 반복, 잡음 단어를 제거하고, "
-                    "정확한 한국어 문장으로 만들어."
-                ),
-            },
-            {"role": "user", "content": raw_text},
-        ]
+        try:
+            data = response.json()
+        except Exception as e:
+            print("[Solar STT] JSON 파싱 에러:", e)
+            print("[Solar STT] Raw response:", response.text)
+            return ""
 
-        solar_resp = solar_chat(
-            messages,
-            model="solar-1-mini-chat",
-        )
+        if "text" not in data:
+            print("[Solar STT] text 필드 없음. 응답:", data)
+            return ""
 
-        cleaned_text = solar_resp.choices[0].message.content.strip()
-        return cleaned_text
+        return data["text"].strip()
