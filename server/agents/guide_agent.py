@@ -1,7 +1,7 @@
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_openai import ChatOpenAI
-from server.agents.policy_rag import POLICY_RETRIEVER
+from agents.policy_rag import POLICY_RETRIEVER
 import os
 
 class GuideAgent:
