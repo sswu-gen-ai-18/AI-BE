@@ -7,4 +7,5 @@ openai==1.35.13
 python-dotenv==1.0.1
 pydantic==2.7.1
 httpx==0.27.0
-faiss-cpu 
+faiss-cpu
+torch==2.2.1
