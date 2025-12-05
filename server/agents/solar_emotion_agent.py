@@ -3,7 +3,7 @@
 import json
 from typing import Dict, Any
 
-from server.agents.solar_client import solar_chat
+from agents.solar_client import solar_chat
 
 
 class SolarEmotionAgent:
