@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI
-from server.routers import process_audio   # ← 이걸로 수정!
+from  AI_BE.server.routers import process_audio   # ← 이걸로 수정!
 
 
 app = FastAPI(title="AI Customer Care Backend")
