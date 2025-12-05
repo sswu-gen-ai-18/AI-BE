@@ -1,14 +1,12 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from server.schemas import CallInput, CallAnalysisResult, ResponseGuide
-from server.agents.intent_agent import IntentAgent
-from server.agents.guide_agent import GuideAgent
-from server.agents.calm_agent import CalmAgent
-from server.agents.emotion_smoothing import EmotionSmoother
-
-from server.agents.solar_emotion_agent import SolarEmotionAgent
-
+from schemas import CallInput, CallAnalysisResult, ResponseGuide
+from agents.intent_agent import IntentAgent
+from agents.guide_agent import GuideAgent
+from agents.calm_agent import CalmAgent
+from agents.emotion_smoothing import EmotionSmoother
+from agents.solar_emotion_agent import SolarEmotionAgent
 
 
 router = APIRouter()
