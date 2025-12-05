@@ -1,6 +1,6 @@
 # Ignore KoBERT model weights
-models/kobert_emotion_final/model.safetensors
-models/kobert_emotion_final/pytorch_model.bin
+server/models/kobert_emotion_final/model.safetensors
+server/models/kobert_emotion_final/pytorch_model.bin
 
 # Python
 __pycache__/
