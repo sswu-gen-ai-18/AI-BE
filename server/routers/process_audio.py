@@ -181,4 +181,9 @@ async def analyze_call_audio(
 # 4) 정책 파일 디버그
 # ==========================
 @router.get("/debug/policies")
-def debug_policies()_
+def debug_policies():
+    import os
+    from agents.policy_rag import POLICY_DIR
+
+    files = os.listdir(POLICY_DIR)
+    return {"policies": files}
