@@ -16,6 +16,8 @@ faiss-cpu
 # Torch + Transformers (KoBERT 호환 안정버전)
 torch==2.1.2
 transformers==4.36.2
+huggingface_hub==0.23.0
+
 
 # KoBERT tokenizer dependency
 sentencepiece==0.1.99
