@@ -2,7 +2,9 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_openai import ChatOpenAI
 from agents.policy_rag import POLICY_RETRIEVER
+from agents.calm_agent import CalmAgent
 import os
+import json
 
 class GuideAgent:
     def __init__(self, model_name="gpt-4o-mini"):
@@ -10,11 +12,48 @@ class GuideAgent:
 
         self.llm = ChatOpenAI(
             model=model_name,
-            temperature=0.3,
+            temperature=0.2,
             openai_api_key=api_key
         )
 
-        # --- UPDATED PromptTemplate ---
+        # CalmAgent 인스턴스
+        self.calm_agent = CalmAgent()
+
+        # ---------------------------------------
+        # ① "AI Agent의 계획 능력"을 담당하는 프롬프트 추가
+        # ---------------------------------------
+        self.planner_prompt = PromptTemplate(
+            input_variables=["intent", "emotion_label", "emotion_score"],
+            template="""
+너는 고객센터 상담 에이전트이다.
+아래 규칙을 바탕으로 어떤 행동(Action)을 먼저 수행해야 할지 스스로 결정하라.
+
+### 규칙
+- emotion_label이 "anger" 또는 "fear"이고 emotion_score ≥ 0.6이면: calm_message 생성 필요.
+- intent가 환불/교환/배송이면: policy_search 필요.
+- 일반 문의라면: basic_response만 수행.
+
+### Output Format (JSON):
+{{
+    "actions": ["calm", "policy", "basic"]
+}}
+
+intent: {intent}
+emotion_label: {emotion_label}
+emotion_score: {emotion_score}
+
+JSON만 출력하라.
+"""
+        )
+
+        self.planner_chain = LLMChain(
+            llm=self.llm,
+            prompt=self.planner_prompt
+        )
+
+        # -------------------------------------------------
+        # ② Guide Response 템플릿 (기존 템플릿 사용)
+        # -------------------------------------------------
         self.template = PromptTemplate(
             input_variables=[
                 "system_prompt",
@@ -24,7 +63,7 @@ class GuideAgent:
                 "emotion_label",
                 "emotion_score"
             ],
-            template="""
+            template=""" 
 {system_prompt}
 
 [정책 정보 참고]
@@ -40,54 +79,12 @@ class GuideAgent:
 [고객 의도]
 {intent}
 
-
 ==================================================
-감정 × 강도 기반 공감 멘트 생성 규칙
-==================================================
-
-1) anger (분노/짜증)
-    - 강도 ≥ 0.7:
-        강한 사과 + 고객의 강한 불편감 인정 + 즉시 해결 의지
-    - 0.4 ≤ 강도 < 0.7:
-        기대와 다름으로 인한 실망감 공감
-    - 강도 < 0.4:
-        부드러운 공감 + 문제 확인
-
-2) fear (불안/공포/걱정)
-    - 강도 ≥ 0.7:
-        강한 안심 + 보호적 언어 + 절차 안내
-    - 0.4 ≤ 강도 < 0.7:
-        차분한 안정 + 상황 설명
-    - 강도 < 0.4:
-        불편 최소화 + 침착한 대응
-
-3) sadness (슬픔/속상함)
-    - 강도 ≥ 0.7:
-        깊은 위로 + 고객 감정 인정
-    - 0.4 ≤ 강도 < 0.7:
-        공감 + 문제 요약
-    - 강도 < 0.4:
-        공감 한 문장 → 해결 안내
-
-4) confusion (혼란/당황)
-    - 강도 ≥ 0.7:
-        매우 혼란스러웠을 상황을 이해 → 절차 정리
-    - 강도 < 0.7:
-        차분한 정리 + 방향 제시
-
-5) neutral
-    - 짧은 공감 후 바로 해결 중심
-
-==================================================
-응답 작성 규칙
-==================================================
-
-- 반드시 감정 기반 공감 문장으로 시작할 것
-- 이어서 문제 요약 → 조치 안내 순서
-- 정책 정보(policy_context)를 적용해 안내
-- 전체는 2~4문장으로 자연스럽게 작성
-- 너무 딱딱하지 말고, 상담사 톤으로 따뜻하게
-
+응답 규칙
+- 감정 기반 공감 문장으로 시작
+- 문제 요약 → 조치 안내 순서
+- 정책 정보(policy_context) 적용
+- 전체는 2~4문장, 상담사 톤
 ==================================================
 
 [응답]
@@ -95,18 +92,44 @@ class GuideAgent:
 """
         )
 
-        self.chain = LLMChain(
-            llm=self.llm,
-            prompt=self.template
+        self.chain = LLMChain(llm=self.llm, prompt=self.template)
+
+    # =====================================================================
+    # ③ 실제 실행: LLM이 'actions'를 계획하고 → Tool들을 실행하는 반자율 구조
+    # =====================================================================
+    def generate(self, system_prompt, user_text, intent, emotion_label, emotion_score):
+
+        # 1) LLM에게 어떤 행동(Action)을 할지 PLAN 결정 요청
+        raw_plan = self.planner_chain.run(
+            intent=intent,
+            emotion_label=emotion_label,
+            emotion_score=emotion_score
         )
 
-    def generate(self, system_prompt: str, user_text: str, intent: str, emotion_label: str, emotion_score: float):
+        try:
+            plan = json.loads(raw_plan)
+            actions = plan.get("actions", [])
+        except:
+            # 실패 시 기본 행동
+            actions = ["policy", "basic"]
 
-        # RAG 검색
-        related_docs = POLICY_RETRIEVER.get_relevant_documents(user_text)
-        policy_context = "\n\n".join(doc.page_content for doc in related_docs)
+        # 2) 각 행동(Action)별로 실행할 결과 누적
+        policy_context = ""
+        calm_message = ""
 
-        response = self.chain.run(
+        for act in actions:
+            if act == "calm":
+                calm_message = self.calm_agent.generate(emotion_label, emotion_score)
+
+            elif act == "policy":
+                docs = POLICY_RETRIEVER.get_relevant_documents(user_text)
+                policy_context = "\n".join(doc.page_content for doc in docs)
+
+            else:
+                pass  # basic은 아래 LLMChain에서 생성됨
+
+        # 3) 최종 응답 생성
+        final_output = self.chain.run(
             system_prompt=system_prompt,
             user_text=user_text,
             policy_context=policy_context,
@@ -115,4 +138,8 @@ class GuideAgent:
             emotion_score=emotion_score
         )
 
-        return response.strip()
+        # 4) calm 메시지가 있으면 맨 앞에 붙임
+        if calm_message:
+            final_output = calm_message + "\n" + final_output
+
+        return final_output.strip()
