@@ -55,11 +55,11 @@ def analyze_call(data: CallInput):
     result = ResponseGuide(
         intent=intent,
         emotion_label=data.emotion_label,
+        response_text=customer_response,          # ✅ 추가
         customer_response_text=customer_response,
-        agent_calm_guide=agent_calm_message
+        agent_calm_guide=agent_calm_message,
     )
     return CallAnalysisResult(result=result)
-
 
 
 # ==========================
@@ -102,11 +102,11 @@ def analyze_call_solar(data: SolarCallInput):
     result = ResponseGuide(
         intent=intent,
         emotion_label=emotion_label,
+        response_text=customer_response,          # ✅ 추가
         customer_response_text=customer_response,
-        agent_calm_guide=agent_calm_message
+        agent_calm_guide=agent_calm_message,
     )
     return CallAnalysisResult(result=result)
-
 
 
 # ==========================
@@ -164,8 +164,9 @@ async def analyze_call_audio(
         result = ResponseGuide(
             intent=intent,
             emotion_label=emotion_label,
+            response_text=customer_response,      # ✅ 추가
             customer_response_text=customer_response,
-            agent_calm_guide=agent_calm_message
+            agent_calm_guide=agent_calm_message,
         )
         return CallAnalysisResult(result=result)
 
@@ -174,7 +175,6 @@ async def analyze_call_audio(
             os.remove(tmp_path)
         except OSError:
             pass
-
 
 
 # ==========================
