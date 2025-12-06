@@ -20,7 +20,7 @@ class GuideAgent:
         self.calm_agent = CalmAgent()
 
         # ---------------------------------------
-        # ① "AI Agent의 계획 능력"을 담당하는 프롬프트 추가
+        #  "AI Agent의 계획 능력"을 담당하는 프롬프트
         # ---------------------------------------
         self.planner_prompt = PromptTemplate(
             input_variables=["intent", "emotion_label", "emotion_score"],
@@ -52,7 +52,7 @@ JSON만 출력하라.
         )
 
         # -------------------------------------------------
-        # ② Guide Response 템플릿 (기존 템플릿 사용)
+        # Guide Response 템플릿
         # -------------------------------------------------
         self.template = PromptTemplate(
             input_variables=[
@@ -95,7 +95,7 @@ JSON만 출력하라.
         self.chain = LLMChain(llm=self.llm, prompt=self.template)
 
     # =====================================================================
-    # ③ 실제 실행: LLM이 'actions'를 계획하고 → Tool들을 실행하는 반자율 구조
+    # 실제 실행: LLM이 'actions'를 계획하고 → Tool들을 실행하는 반자율 구조
     # =====================================================================
     def generate(self, system_prompt, user_text, intent, emotion_label, emotion_score):
 
