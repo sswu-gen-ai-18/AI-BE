@@ -1,46 +1,38 @@
 # server/agents/stt_agent.py
+
 import os
-import requests
-
-UPSTAGE_API_KEY = os.getenv("UPSTAGE_API_KEY")
-
-# Upstage Solar STT 엔드포인트
-SOLAR_STT_URL = "https://api.upstage.ai/v1/audio/transcriptions"
+import whisper
 
 
 class STTAgent:
-    def __init__(self):
-        if UPSTAGE_API_KEY is None:
-            raise ValueError("UPSTAGE_API_KEY is not set!")
+    """
+    Whisper 기반 STT 에이전트 (음성 -> 텍스트)
+    """
+
+    def __init__(self, device: str | None = None):
+        # 로컬(Mac)에서는 mps, Render 같은 서버에서는 cpu 사용
+        if device is None:
+            # macOS면 mps, 그 외는 cpu
+            if os.uname().sysname == "Darwin":
+                device = "mps"
+            else:
+                device = "cpu"
+
+        print(f"[STTAgent] Whisper 모델 로딩 중... (device={device})")
+        self.model = whisper.load_model("small", device=device)
 
     def transcribe(self, audio_path: str) -> str:
         """
-        Solar STT를 사용하여 음성을 텍스트로 변환.
-        긴 음성도 내부에서 발화 단위로 잘라서 처리해줌.
+        Whisper를 사용해서 음성을 한국어 텍스트로 변환
         """
-        with open(audio_path, "rb") as f:
-            response = requests.post(
-                SOLAR_STT_URL,
-                headers={
-                    "Authorization": f"Bearer {UPSTAGE_API_KEY}"
-                },
-                files={
-                    "file": (os.path.basename(audio_path), f, "audio/wav")
-                },
-                data={
-                    "language": "ko"
-                },
-            )
+        print(f"[STTAgent] STT 시작: {audio_path}")
 
-        try:
-            data = response.json()
-        except Exception as e:
-            print("[Solar STT] JSON 파싱 에러:", e)
-            print("[Solar STT] Raw response:", response.text)
-            return ""
+        result = self.model.transcribe(
+            audio_path,
+            language="ko",
+            fp16=False,  # cpu/mps 환경에서 안전하게
+        )
 
-        if "text" not in data:
-            print("[Solar STT] text 필드 없음. 응답:", data)
-            return ""
-
-        return data["text"].strip()
+        text = (result.get("text") or "").strip()
+        print(f"[STTAgent] STT 결과: {text}")
+        return text
