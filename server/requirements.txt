@@ -25,3 +25,5 @@ protobuf==3.20.3
 
 # 기본
 numpy
+
+python-multipart
