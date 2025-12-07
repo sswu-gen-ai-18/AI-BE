@@ -6,7 +6,8 @@ class CalmAgent:
         api_key = os.getenv("OPENAI_API_KEY")
         self.client = OpenAI(api_key=api_key)
 
-    def generate(self, emotion_label):
+    # emotion_score는 추가되지만 사용하지 않아도 됨
+    def generate(self, emotion_label, emotion_score=None):
         prompt = f"""
 상담사에게 줄 감정 안정 가이드를 생성하세요.
 
