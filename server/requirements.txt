@@ -1,10 +1,28 @@
 langchain
 langchain-openai
 langchain-community
+
 fastapi==0.110.0
 uvicorn==0.29.0
+
 openai==1.35.13
 python-dotenv==1.0.1
 pydantic==2.7.1
 httpx==0.27.0
-faiss-cpu 
+requests==2.31.0
+
+faiss-cpu
+
+# Torch + Transformers (KoBERT 호환 안정버전)
+torch==2.1.2
+transformers==4.36.2
+huggingface_hub==0.23.0
+
+# KoBERT tokenizer dependency
+sentencepiece==0.1.99
+protobuf==3.20.3
+
+# 기본
+numpy
+
+python-multipart
