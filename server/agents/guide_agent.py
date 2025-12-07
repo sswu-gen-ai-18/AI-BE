@@ -29,7 +29,7 @@ class GuideAgent:
 아래 규칙을 바탕으로 어떤 행동(Action)을 먼저 수행해야 할지 스스로 결정하라.
 
 ### 규칙
-- emotion_label이 "anger" 또는 "fear"이고 emotion_score ≥ 0.6이면: calm_message 생성 필요.
+- emotion_label이 "anger" 또는 "fear" 또는 "sad"이고 emotion_score ≥ 0.6이면: calm_message 생성 필요.
 - intent가 환불/교환/배송이면: policy_search 필요.
 - 일반 문의라면: basic_response만 수행.
 

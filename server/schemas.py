@@ -9,12 +9,10 @@ class CallInput(BaseModel):
 
 
 class ResponseGuide(BaseModel):
-    # 기본값을 넣어서 없어도 에러 안 나게
     intent: str = ""
     emotion_label: str = ""
-    response_text: str = ""
-    customer_response_text: str = ""   # GuideAgent가 만든 고객응대 문장
-    agent_calm_guide: str = ""         # CalmAgent가 만든 상담사 안정 가이드
+    emotion_score: float = 0.0
+    response_text: str = ""   # 최종 패키징된 텍스트 (고객 대응 + 안정 피드백)
 
 
 class CallAnalysisResult(BaseModel):
