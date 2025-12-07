@@ -147,12 +147,5 @@ JSON만 출력하라.
         # 4) 최종 response_text 조합
         #    → LLM이 섞지 못하게 "고정 문자열"로 조립
         # ------------------------------
-        final_response = f"""
-### 🟩 상담사 안정 피드백
-{calm_message if calm_message else "해당 감정 안정 피드백 없음."}
 
-### 🟦 추천 대응문
-{guide_reply}
-""".strip()
-
-        return final_response
+        return guide_reply
