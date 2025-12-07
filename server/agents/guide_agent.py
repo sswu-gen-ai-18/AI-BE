@@ -84,6 +84,7 @@ JSON만 출력하라.
 - 감정 기반 공감 문장으로 시작
 - 문제 요약 → 조치 안내 순서
 - 정책 정보(policy_context) 적용
+- 고객에게 전달하는 말만 작성 (상담사 안정 문장 금지)
 - 전체는 2~4문장, 상담사 톤
 ==================================================
 
@@ -113,33 +114,45 @@ JSON만 출력하라.
             # 실패 시 기본 행동
             actions = ["policy", "basic"]
 
-        # 2) 각 행동(Action)별로 실행할 결과 누적
+        # ------------------------------
+        # 2) PLAN 기반 실행
+        # ------------------------------
         policy_context = ""
         calm_message = ""
 
         for act in actions:
             if act == "calm":
-                calm_message = self.calm_agent.generate(emotion_label, emotion_score)
+                calm_message = self.calm_agent.generate(
+                    emotion_label=emotion_label,
+                    emotion_score=emotion_score
+                )
 
             elif act == "policy":
                 docs = POLICY_RETRIEVER.get_relevant_documents(user_text)
                 policy_context = "\n".join(doc.page_content for doc in docs)
 
-            else:
-                pass  # basic은 아래 LLMChain에서 생성됨
-
-        # 3) 최종 응답 생성
-        final_output = self.chain.run(
+        # ------------------------------
+        # 3) 고객 대응문 생성
+        # ------------------------------
+        guide_reply = self.chain.run(
             system_prompt=system_prompt,
             user_text=user_text,
             policy_context=policy_context,
             intent=intent,
             emotion_label=emotion_label,
             emotion_score=emotion_score
-        )
+        ).strip()
 
-        # 4) calm 메시지가 있으면 맨 앞에 붙임
-        if calm_message:
-            final_output = calm_message + "\n" + final_output
+        # ------------------------------
+        # 4) 최종 response_text 조합
+        #    → LLM이 섞지 못하게 "고정 문자열"로 조립
+        # ------------------------------
+        final_response = f"""
+### 🟩 상담사 안정 피드백
+{calm_message if calm_message else "해당 감정 안정 피드백 없음."}
 
-        return final_output.strip()
+### 🟦 추천 대응문
+{guide_reply}
+""".strip()
+
+        return final_response
